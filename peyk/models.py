@@ -12,7 +12,7 @@ USER_ROLES=[('customer', 'customer'),
 
 class Account(models.Model):
     user = models.OneToOneField(User, on_delete = models.CASCADE)
-    phone_number = models.CharField(max_length = 11)
+    phone_number = models.CharField(max_length = 11, unique= True)
     role = models.CharField(choices = USER_ROLES, max_length = 50)
     
     def __str__(self) -> str:
