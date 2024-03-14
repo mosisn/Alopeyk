@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser, Group, Permission
 
 STATUS_CHOICES=[('0', 'Pending acceptance'),
                 ('1', 'Courier in route to pickup location'),
@@ -10,18 +10,23 @@ STATUS_CHOICES=[('0', 'Pending acceptance'),
 USER_ROLES=[('customer', 'customer'),
             ('driver', 'driver')]
 
-class Account(models.Model):
-    user = models.OneToOneField(User, on_delete = models.CASCADE)
+class Account(AbstractUser):
+    username = models.CharField(max_length = 50)
     phone_number = models.CharField(max_length = 11, unique= True)
     role = models.CharField(choices = USER_ROLES, max_length = 50)
+    password = models.CharField(max_length= 128)
+    otp = models.CharField(max_length = 5, blank=True)
+    is_authorized = models.BooleanField(default= False)
+    groups = models.ManyToManyField(Group, related_name='user_accounts', blank=True)
+    user_permissions = models.ManyToManyField(Permission, related_name='user_accounts', blank=True)
     
-    def __str__(self) -> str:
-        return self.user.username
+    def __str__(self):
+        return self.username
 
 
 class Order(models.Model):
-    user = models.ForeignKey(User, on_delete = models.PROTECT, related_name = 'user')
-    driver = models.ForeignKey(User, on_delete = models.PROTECT, related_name = 'driver')
+    user = models.ForeignKey(Account, on_delete = models.PROTECT, related_name = 'user')
+    driver = models.ForeignKey(Account, on_delete = models.PROTECT, related_name = 'driver')
     origin = models.CharField(max_length = 20)
     destination = models.CharField(max_length = 20)
     price = models.PositiveIntegerField()
