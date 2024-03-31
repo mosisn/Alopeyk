@@ -10,7 +10,6 @@ from random import randint
 import traceback
 
 
-
 class AccountList(APIView):
     
     def get(self, request):
@@ -64,6 +63,27 @@ class FirstLoginView(APIView):
         except Exception as e:
             traceback.print_exc()
             return Response("An error occurred", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class LoginView(APIView):
+    def post(self, request):
+        body = request.data
+        phone_number = body.get('phone_number')
+        password = body.get('password')
+        hashed_password = make_password(password)
+        try:
+            user = Account.objects.get(phone_number=phone_number)
+            if user.password == hashed_password:
+                current_user = Account.objects.get(username=phone_number)
+                access_token = create_access_token(current_user.id)
+                refresh_token = create_refresh_token(current_user.id)
+                res = Response(access_token)
+                res.set_cookie('refresh_token', refresh_token, httponly=True)
+                return res
+            else:
+                return Response("password is Wrong!", status=403)
+        except:
+            return Response("Something is Wrong!", status=500)
 
 class OrderList(generics.ListCreateAPIView):
     queryset = Order.objects.all()
